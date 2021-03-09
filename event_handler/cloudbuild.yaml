@@ -15,19 +15,19 @@
 steps:
 - # Build event_handler image
   name: gcr.io/cloud-builders/docker:latest
-  args: ['build', '--tag=gcr.io/$PROJECT_ID/event-handler:${_TAG}', '.']
+  args: ['build', '--tag=${_GCR_DOMAIN}/$PROJECT_ID/event-handler:${_TAG}', '${_CONTEXT}']
   id: build
 
 - # Push the container image to Container Registry
   name: gcr.io/cloud-builders/docker
-  args: ['push', 'gcr.io/$PROJECT_ID/event-handler:${_TAG}']
+  args: ['push', '${_GCR_DOMAIN}/$PROJECT_ID/event-handler:${_TAG}']
   waitFor: ["build"]
   id: push
 
 - # Deploy to Cloud Run
   name: google/cloud-sdk
   args: ['gcloud', 'run', 'deploy', 'event-handler',
-         '--image', 'gcr.io/$PROJECT_ID/event-handler:${_TAG}',
+         '--image', '${_GCR_DOMAIN}/$PROJECT_ID/event-handler:${_TAG}',
          '--region', '${_REGION}',
          '--platform', 'managed',
          '--allow-unauthenticated',
@@ -36,6 +36,9 @@ steps:
   id: deploy
   waitFor: ["push"]
 
+substitutions:
+  _CONTEXT: '.'
+  _GCR_DOMAIN: 'gcr.io'
 images: [
-  'gcr.io/$PROJECT_ID/event-handler:${_TAG}'
+  '${_GCR_DOMAIN}/$PROJECT_ID/event-handler:${_TAG}'
 ]
