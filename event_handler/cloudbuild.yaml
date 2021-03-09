@@ -21,7 +21,7 @@ steps:
 - # Push the container image to Container Registry
   name: gcr.io/cloud-builders/docker
   args: ['push', 'gcr.io/$PROJECT_ID/event-handler:${_TAG}']
-  waitFor: build
+  waitFor: ["build"]
   id: push
 
 - # Deploy to Cloud Run
@@ -34,7 +34,7 @@ steps:
          '--set-env-vars', 'PROJECT_NAME=$PROJECT_ID'
   ]
   id: deploy
-  waitFor: push
+  waitFor: ["push"]
 
 images: [
   'gcr.io/$PROJECT_ID/event-handler:${_TAG}'
