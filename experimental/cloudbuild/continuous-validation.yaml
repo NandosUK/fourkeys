@@ -10,4 +10,4 @@ includedFiles:
 name: continuous-validation-of-fourkeys
 substitutions:
   _CI_CD_SYSTEMS: '"cloud-build", "tekton", "gitlab"'
-  _VERSION_CONTROL_SYSTEM: '"github, "gitlab"'
+  _VERSION_CONTROL_SYSTEM: '"github", "gitlab"'

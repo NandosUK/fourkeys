@@ -14,6 +14,7 @@
 # limitations under the License.
 
 steps:
+# [START tf-branch]
   - id: 'branch name'
     name: 'alpine'
     entrypoint: 'sh'
@@ -23,7 +24,8 @@ steps:
         echo ********************************************************************************
         echo "${BRANCH_NAME}"
         echo ********************************************************************************
-
+# [END tf-branch]
+# [START tf-init]
   - id: 'tf init'
     name: 'hashicorp/terraform:0.14.7'
     entrypoint: 'sh'
@@ -32,27 +34,29 @@ steps:
       - |
         if [ -d "$${STACK_PATH}" ]; then
           cd "$${STACK_PATH}"
-          PROJECT_ID=$(gcloud config get-value project)
-          cat > backend.tf <<EOF
-terraform {
-  backend "gcs" {
-    bucket = "${PROJECT_ID}-state"
-    impersonate_service_account = "terraform@${PROJECT_ID}.iam.gserviceaccount.com"
-    prefix = "fourkeys"
-  }
-}
-          EOF
-          cat > terraform.tfvars <<EOF
-google_artifact_location = "${_GCR_REGION}"
-google_project_id = "${PROJECT_ID}"
-google_project_number = $(gcloud projects list --filter="projectId=${PROJECT_ID}" --format="value(projectNumber)")
-google_region = "${_PROJECT_REGION}"
 
-version_control_systems = [ ${_VERSION_CONTROL_SYSTEM} ]
-ci_cd_systems = [ ${_CI_CD_SYSTEMS} ]
-git_hub_owner = "${_OWNER}"
-git_hub_repository = "${REPO_NAME}"
+          PROJECT_ID=$(gcloud config get-value project)
+          
+          cat > backend.tf <<EOF
+          terraform {
+            backend "gcs" {
+              bucket = "${PROJECT_ID}-${_PROJECT_REGION}-state"
+              prefix = "fourkeys"
+            }
+          }
           EOF
+          
+          cat > terraform.tfvars <<EOF
+          google_artifact_location = "${_GCR_REGION}"
+          google_project_id = "${PROJECT_ID}"
+          google_project_number = $(gcloud projects list --filter="projectId=${PROJECT_ID}" --format="value(projectNumber)")
+          google_region = "${_PROJECT_REGION}"
+          version_control_systems = [ ${_VERSION_CONTROL_SYSTEM} ]
+          ci_cd_systems = [ ${_CI_CD_SYSTEMS} ]
+          git_hub_owner = "${_OWNER}"
+          git_hub_repository = "${REPO_NAME}"
+          EOF
+          
           terraform init
         else
           echo "***************************** SKIPPING INIT ************************************"
@@ -60,8 +64,8 @@ git_hub_repository = "${REPO_NAME}"
           echo "********************************************************************************"
           exit 1
         fi
-
-  # [START tf-validate]
+# [END tf-init]
+# [START tf-validate]
   - id: 'tf validate'
     name: 'hashicorp/terraform:0.14.7'
     entrypoint: 'sh'
@@ -125,4 +129,5 @@ substitutions:
   _GCR_REGION: 'us'
   _OWNER:	'$(push.repository.owner.name)'
   _PROVISION: 'main'
-  _VERSION_CONTROL_SYSTEM: '"github, "gitlab""'
+  _VERSION_CONTROL_SYSTEM: '"github", "gitlab"'
+  _PROJECT_REGION: 'us-central1'
