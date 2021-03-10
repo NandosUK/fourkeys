@@ -1,0 +1,13 @@
+description: Terraform validation and plan of a proposed feature.
+filename: gcp/organization/cloudbuild.yaml
+github:
+  name: fourkeys
+  owner: GoogleCloudPlatform
+  push:
+    branch: '[^main]'
+includedFiles:
+- gcp/organization/**
+name: continuous-validation-of-fourkeys
+substitutions:
+  _CI_CD_SYSTEMS: '"cloud-build", "tekton", "gitlab"'
+  _VERSION_CONTROL_SYSTEM: '"github, "gitlab"'

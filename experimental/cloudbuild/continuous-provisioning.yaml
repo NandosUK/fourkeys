@@ -1,0 +1,11 @@
+description: Terraform validation, plan and apply of configuration.
+filename: experimental/cloudbuild/cloudbuild.yaml
+github:
+  name: fourkeys
+  owner: GoogleCloudPlatform
+  push:
+    branch: ^main$
+name: continuous-provisioning-of-fourkeys
+substitutions:
+  _CI_CD_SYSTEMS: '"cloud-build", "tekton", "gitlab"'
+  _VERSION_CONTROL_SYSTEM: '"github, "gitlab"'
