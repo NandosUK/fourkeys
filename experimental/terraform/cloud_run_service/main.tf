@@ -1,7 +1,32 @@
-resource "google_cloud_run_service" "cloud_run_service" {
-  name     = var.service_name
-  location = var.google_region
+# Copyright 2020 Google LLC
+# Copyright 2021 Nando’s Chickenland Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+resource "google_cloud_run_service" "default" {
+  location = var.google_region
+  name     = var.service_name
+  project  = var.google_project_id
+
+  autogenerate_revision_name = true
+
+  metadata {
+    namespace = var.google_project_id
+    labels = {
+      creator = "terraform"
+    }
+  }
+  
   template {
     spec {
       containers {
@@ -11,6 +36,7 @@ resource "google_cloud_run_service" "cloud_run_service" {
           value = var.google_project_id
         }
       }
+      service_account_name = var.service_account_email
     }
   }
 
@@ -19,29 +45,44 @@ resource "google_cloud_run_service" "cloud_run_service" {
     latest_revision = true
   }
 
-  autogenerate_revision_name = true
-
   depends_on = [
     null_resource.app_container,
   ]
 
+  lifecycle {
+    ignore_changes = [
+      metadata["labels"] # to stop terraform changing location.
+    ]
+  }
+
 }
 
-data "google_iam_policy" "run_noauth" {
-  binding {
-    role = "roles/run.invoker"
-    members = [
-      "allUsers",
-    ]
+resource "google_cloud_run_domain_mapping" "default" {
+  count = var.fqdn == null ? 0 : 1
+
+  location = var.google_region
+  name     = var.fqdn
+  project  = var.google_project_id
+
+  metadata {
+    namespace = var.google_project_id
+    annotations = {
+      "creator" = "terraform"
+    }
+  }
+
+  spec {
+    route_name = google_cloud_run_service.default.name
   }
 }
 
-resource "google_cloud_run_service_iam_policy" "noauth" {
-  location = google_cloud_run_service.cloud_run_service.location
-  project  = google_cloud_run_service.cloud_run_service.project
-  service  = google_cloud_run_service.cloud_run_service.name
+resource "google_cloud_run_service_iam_binding" "noauth" {
+  location = google_cloud_run_service.default.location
+  project  = google_cloud_run_service.default.project
+  service  = google_cloud_run_service.default.name
 
-  policy_data = data.google_iam_policy.run_noauth.policy_data
+  role = "roles/run.invoker"
+  members = var.invokers
 }
 
 resource "null_resource" "app_container" {
@@ -49,5 +90,4 @@ resource "null_resource" "app_container" {
     # build container using Dockerfile
     command = "gcloud builds submit ${var.container_source_path} --tag=${var.container_image_path} --project=${var.google_project_id}"
   }
-
 }
