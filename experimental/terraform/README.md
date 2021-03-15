@@ -52,7 +52,7 @@ gcloud iam service-accounts create ${TF_SA_NAME} \
   --description "Infrastructure Provisioner" \
   --display-name "Terraform"
 # grant service account permission to view Admin Project & Manage Cloud Storage
-for ROLE in 'viewer' 'storage.admin' 'cloudbuild.builds.builder' 'run.admin' 'iam.serviceAccountUser' 'iam.serviceAccountAdmin' 'resourcemanager.projectIamAdmin' 'pubsub.admin' 'bigquery.admin' 'secretmanager.admin'; do
+for ROLE in 'viewer' 'storage.admin' 'cloudbuild.builds.builder' 'run.admin' 'iam.serviceAccountUser' 'iam.serviceAccountAdmin' 'pubsub.admin' 'bigquery.admin' 'secretmanager.admin'; do
   gcloud projects add-iam-policy-binding ${PROJECT_ID} \
     --member serviceAccount:${TF_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com \
     --role roles/${ROLE}
