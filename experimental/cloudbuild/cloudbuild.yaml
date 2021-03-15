@@ -37,25 +37,21 @@ steps:
 
           PROJECT_ID=$(gcloud config get-value project)
           
-          cat > backend.tf <<EOF
-          terraform {
-            backend "gcs" {
-              bucket = "${PROJECT_ID}-${_PROJECT_REGION}-state"
-              prefix = "fourkeys"
-            }
-          }
-          EOF
-          
-          cat > terraform.tfvars <<EOF
-          google_artifact_location = "${_GCR_REGION}"
-          google_project_id = "${PROJECT_ID}"
-          google_project_number = $(gcloud projects list --filter="projectId=${PROJECT_ID}" --format="value(projectNumber)")
-          google_region = "${_PROJECT_REGION}"
-          version_control_systems = [ ${_VERSION_CONTROL_SYSTEM} ]
-          ci_cd_systems = [ ${_CI_CD_SYSTEMS} ]
-          git_hub_owner = "${_OWNER}"
-          git_hub_repository = "${REPO_NAME}"
-          EOF
+          echo "terraform {" >> backend.tf
+          echo "  backend \"gcs\" {" >> backend.tf
+          echo "    bucket = \"${PROJECT_ID}-${_PROJECT_REGION}-state\"" >> backend.tf
+          echo "    prefix = \"fourkeys\"" >> backend.tf
+          echo "  }" >> backend.tf
+          echo "}" >> backend.tf
+
+          echo "google_artifact_location = \"${_GCR_REGION}\"" >> terraform.tfvars
+          echo "google_project_id = \"${PROJECT_ID}\"" >> terraform.tfvars
+          echo "google_project_number = $(gcloud projects list --filter="projectId=${PROJECT_ID}" --format="value(projectNumber)")" >> terraform.tfvars
+          echo "google_region = \"${_PROJECT_REGION}\"" >> terraform.tfvars
+          echo "version_control_systems = [ ${_VERSION_CONTROL_SYSTEM} ]" >> terraform.tfvars
+          echo "ci_cd_systems = [ ${_CI_CD_SYSTEMS} ]" >> terraform.tfvars
+          echo "git_hub_owner = \"${_OWNER}\"" >> terraform.tfvars
+          echo "git_hub_repository = \"${REPO_NAME}\"" >> terraform.tfvars
           
           terraform init
         else
@@ -129,5 +125,5 @@ substitutions:
   _GCR_REGION: 'us'
   _OWNER:	'$(push.repository.owner.name)'
   _PROVISION: 'main'
-  _VERSION_CONTROL_SYSTEM: '"github", "gitlab"'
   _PROJECT_REGION: 'us-central1'
+  _VERSION_CONTROL_SYSTEM: '"github", "gitlab"'
